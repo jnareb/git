@@ -710,8 +710,9 @@ git.spec: git.spec.in
 	mv $@+ $@
 
 GIT_TARNAME=git-$(GIT_VERSION)
-dist: git.spec git-tar-tree
-	./git-tar-tree HEAD^{tree} $(GIT_TARNAME) > $(GIT_TARNAME).tar
+dist: git.spec #git-tar-tree
+	#./git-tar-tree HEAD^{tree} $(GIT_TARNAME) > $(GIT_TARNAME).tar
+	git-tar-tree HEAD^{tree} $(GIT_TARNAME) > $(GIT_TARNAME).tar
 	@mkdir -p $(GIT_TARNAME)
 	@cp git.spec $(GIT_TARNAME)
 	@echo $(GIT_VERSION) > $(GIT_TARNAME)/version
@@ -721,6 +722,9 @@ dist: git.spec git-tar-tree
 	gzip -f -9 $(GIT_TARNAME).tar
 
 rpm: dist
+	autoconf
+	diff -Nu /dev/null configure > git-add-autoconf-configure.patch || true
+	gzip -f -9 git-add-autoconf-configure.patch
 	$(RPMBUILD) -ta $(GIT_TARNAME).tar.gz
 
 htmldocs = git-htmldocs-$(GIT_VERSION)
