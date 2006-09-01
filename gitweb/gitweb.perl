@@ -76,9 +76,12 @@ our %feature = (
 	#
 	# if feature is overridable (it means that allow-override has true value,
 	# then feature-sub will be called with default options as parameters;
-	# return value of feature-sub indicates if to enable specified feature
+	# return value of feature-sub indicates if to enable specified feature,
+	# and is taken to be current parameters of the feature
 	#
-	# use gitweb_check_feature(<feature>) to check if <feature> is enabled
+	# use gitweb_check_feature(<feature>) to check if <feature> is enabled;
+	# to be more exact to get current parameters of <feature>;
+	# gitweb_check_feature(<feature>) returns array (list) of current options
 
 	'blame' => {
 		'sub' => \&feature_blame,
@@ -113,12 +116,12 @@ sub feature_blame {
 	my ($val) = git_get_project_config('blame', '--bool');
 
 	if ($val eq 'true') {
-		return 1;
+		return (1);
 	} elsif ($val eq 'false') {
-		return 0;
+		return (0);
 	}
 
-	return $_[0];
+	return ($_[0]);
 }
 
 # To disable system wide have in $GITWEB_CONFIG
