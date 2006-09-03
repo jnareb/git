@@ -2758,7 +2758,7 @@ sub git_commit {
 		      "<td class=\"link\">" .
 		      $cgi->a({-href => href(action=>"commit", hash=>$par)}, "commit") .
 		      " | " .
-		      $cgi->a({-href => href(action=>"commitdiff", hash=>$hash, hash_parent=>$par)}, "commitdiff") .
+		      $cgi->a({-href => href(action=>"commitdiff", hash=>$hash, hash_parent=>$par)}, "diff") .
 		      "</td>" .
 		      "</tr>\n";
 	}
