@@ -1519,7 +1519,7 @@ sub git_difftree_body {
 			      $cgi->a({-href => href(action=>"blob", hash=>$diff{'to_id'},
 			                             hash_base=>$hash, file_name=>$diff{'file'})},
 			              "blob");
-			if ($action == "commitdiff") {
+			if ($action eq 'commitdiff') {
 				# link to patch
 				$patchno++;
 				print " | " .
@@ -1540,7 +1540,7 @@ sub git_difftree_body {
 			                             hash_base=>$parent, file_name=>$diff{'file'})},
 			              "blob") .
 			      " | ";
-			if ($action == "commitdiff") {
+			if ($action eq 'commitdiff') {
 				# link to patch
 				$patchno++;
 				print " | " .
@@ -1586,7 +1586,7 @@ sub git_difftree_body {
 			                             hash_base=>$hash, file_name=>$diff{'file'})},
 			              "blob");
 			if ($diff{'to_id'} ne $diff{'from_id'}) { # modified
-				if ($action == "commitdiff") {
+				if ($action eq 'commitdiff') {
 					# link to patch
 					$patchno++;
 					print " | " .
@@ -1628,7 +1628,7 @@ sub git_difftree_body {
 			                             hash=>$diff{'to_id'}, file_name=>$diff{'to_file'})},
 			              "blob");
 			if ($diff{'to_id'} ne $diff{'from_id'}) {
-				if ($action == "commitdiff") {
+				if ($action eq 'commitdiff') {
 					# link to patch
 					$patchno++;
 					print " | " .
