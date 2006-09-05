@@ -1946,7 +1946,7 @@ sub git_shortlog_body {
 		my $commit = $revlist->[$i];
 		#my $ref = defined $refs ? format_ref_marker($refs, $commit) : '';
 		my $ref = format_ref_marker($refs, $commit);
-		my %co = parse_commit($commit);
+		my %co = ref $commit ? %$commit : parse_commit($commit);
 		if ($alternate) {
 			print "<tr class=\"dark\">\n";
 		} else {
@@ -1987,12 +1987,13 @@ sub git_history_body {
 	print "<table class=\"history\" cellspacing=\"0\">\n";
 	my $alternate = 0;
 	for (my $i = $from; $i <= $to; $i++) {
-		if ($revlist->[$i] !~ m/^([0-9a-fA-F]{40})/) {
+		if (ref($revlist->[$i]) ne "HASH" &&
+		    $revlist->[$i] !~ m/^([0-9a-fA-F]{40})/) {
 			next;
 		}
 
 		my $commit = $1;
-		my %co = parse_commit($commit);
+		my %co = ref $commit ? %$commit : parse_commit($commit);
 		if (!%co) {
 			next;
 		}
@@ -3179,12 +3180,9 @@ sub git_history {
 		$ftype = git_get_type($hash);
 	}
 
-	open my $fd, "-|",
-		git_cmd(), "rev-list", $limit, @hist_opts, $hash_base, "--", $file_name
-			or die_error(undef, "Open git-rev-list-failed");
-	my @revlist = map { chomp; $_ } <$fd>;
-	close $fd
-		or die_error(undef, "Reading git-rev-list failed");
+	my @revlist = parse_rev_list($limit, @hist_opts, $hash_base, "--", $file_name)
+		or die_error(undef, "Parsing git-rev-list failed");
+
 
 	my $paging_nav = '';
 	if ($page > 0) {
@@ -3387,10 +3385,9 @@ sub git_shortlog {
 	my $refs = git_get_references();
 
 	my $limit = sprintf("--max-count=%i", (100 * ($page+1)));
-	open my $fd, "-|", git_cmd(), "rev-list", $limit, $hash
-		or die_error(undef, "Open git-rev-list failed");
-	my @revlist = map { chomp; $_ } <$fd>;
-	close $fd;
+	my @revlist = parse_rev_list($limit, $hash)
+		or die_error(undef, "Parsing git-rev-list failed");
+
 
 	my $paging_nav = format_paging_nav('shortlog', $hash, $head, $page, $#revlist);
 	my $next_link = '';
