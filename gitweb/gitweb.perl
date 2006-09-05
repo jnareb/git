@@ -1125,6 +1125,35 @@ sub git_get_refs_list {
 	return \@reflist;
 }
 
+# To use only one invocation of git-rev-list, instead of getting
+# the list of revisions and then using git-rev-list per revision
+# to parse individual commits.
+#
+# parse_rev_list parameters are passed to git-rev-list, so they should
+# include at least starting revision; just in case we default to HEAD
+sub parse_rev_list {
+	my @rev_opts = @_;
+	my @revlist;
+
+	@rev_opts = ("HEAD") unless @rev_opts;
+
+	local $/ = "\0";
+	open my $fd, "-|", git_cmd(), "rev-list", "--header", "--parents", @rev_opts
+		or return \@revlist;
+
+	while (my $revinfo = <$fd>) {
+		chomp $revinfo;
+		my @commit_lines = split '\n', $revinfo;
+		my %co = parse_commit(undef, \@commit_lines);
+
+		push @revlist, \%co;
+	}
+
+	close $fd;
+
+	return wantarray ? @revlist : \@revlist;
+}
+
 ## ----------------------------------------------------------------------
 ## filesystem-related functions
 
