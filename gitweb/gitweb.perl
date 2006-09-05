@@ -176,8 +176,22 @@ sub feature_pickaxe {
 #   (number of changed files + number of removed files) * (number of new files)
 # - even more costly is '-C', '--find-copies-harder' with cost
 #   (number of files in the original tree) * (number of new files)
-# - one might want to include '-B' option, e.g. '-B', '-M'
+# - one might want to include '-B' option, e.g. have it ('-B', '-M'),
+#   or for example '-l<num>' together with '-M' and perhaps '-C'
 our @diff_opts = ('-M'); # taken from git_commit
+
+# options fo git-rev-list used in git_history
+# - default is '--full-history', which is slowest but works with merges,
+#   and was done to not change the output from previous version when
+#   path limiting was done by piping revisions to git-diff-tree --stdin
+# - less costly is (), i.e. without '--full-history', which of course
+#   changes output and provides _simplified_ history of a file
+# - for files which appeared late in the history less costly is
+#   --full-history, --remove-empty, although it changes output in
+#   the rare case when name vanished the appeared thorough the history;
+#   it improves performance of course only the last page of history
+# - least costly, but changing output, is having --remove-mepty only
+our @hist_opts = ('--full-history');
 
 our $GITWEB_CONFIG = $ENV{'GITWEB_CONFIG'} || "++GITWEB_CONFIG++";
 do $GITWEB_CONFIG if -e $GITWEB_CONFIG;
@@ -3137,7 +3151,7 @@ sub git_history {
 	}
 
 	open my $fd, "-|",
-		git_cmd(), "rev-list", $limit, "--full-history", $hash_base, "--", $file_name
+		git_cmd(), "rev-list", $limit, @hist_opts, $hash_base, "--", $file_name
 			or die_error(undef, "Open git-rev-list-failed");
 	my @revlist = map { chomp; $_ } <$fd>;
 	close $fd
