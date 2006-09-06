@@ -3153,6 +3153,9 @@ sub git_history {
 	if (!defined $hash_base) {
 		$hash_base = git_get_head_hash($project);
 	}
+	if (!defined $page) {
+		$page = 0;
+	}
 	my $ftype;
 	my %co = parse_commit($hash_base);
 	if (!%co) {
