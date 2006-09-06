@@ -1943,21 +1943,19 @@ sub git_shortlog_body {
 	print "<table class=\"shortlog\" cellspacing=\"0\">\n";
 	my $alternate = 0;
 	for (my $i = $from; $i <= $to; $i++) {
-		my $commit = $revlist->[$i];
-		#my $ref = defined $refs ? format_ref_marker($refs, $commit) : '';
+		my $co = $revlist->[$i];
+		my $commit = $co->{'id'};
 		my $ref = format_ref_marker($refs, $commit);
-		my %co = ref $commit ? %$commit : parse_commit($commit);
 		if ($alternate) {
 			print "<tr class=\"dark\">\n";
 		} else {
 			print "<tr class=\"light\">\n";
 		}
 		$alternate ^= 1;
-		# git_summary() used print "<td><i>$co{'age_string'}</i></td>\n" .
-		print "<td title=\"$co{'age_string_age'}\"><i>$co{'age_string_date'}</i></td>\n" .
-		      "<td><i>" . esc_html(chop_str($co{'author_name'}, 10)) . "</i></td>\n" .
+		print "<td title=\"$co->{'age_string_age'}\"><i>$co->{'age_string_date'}</i></td>\n" .
+		      "<td><i>" . esc_html(chop_str($co->{'author_name'}, 10)) . "</i></td>\n" .
 		      "<td>";
-		print format_subject_html($co{'title'}, $co{'title_short'},
+		print format_subject_html($co->{'title'}, $co->{'title_short'},
 		                          href(action=>"commit", hash=>$commit), $ref);
 		print "</td>\n" .
 		      "<td class=\"link\">" .
@@ -1987,17 +1985,8 @@ sub git_history_body {
 	print "<table class=\"history\" cellspacing=\"0\">\n";
 	my $alternate = 0;
 	for (my $i = $from; $i <= $to; $i++) {
-		if (ref($revlist->[$i]) ne "HASH" &&
-		    $revlist->[$i] !~ m/^([0-9a-fA-F]{40})/) {
-			next;
-		}
-
-		my $commit = $1;
-		my %co = ref $commit ? %$commit : parse_commit($commit);
-		if (!%co) {
-			next;
-		}
-
+		my $co = $revlist->[$i];
+		my $commit = $co->{'id'};
 		my $ref = format_ref_marker($refs, $commit);
 
 		if ($alternate) {
@@ -2006,12 +1995,12 @@ sub git_history_body {
 			print "<tr class=\"light\">\n";
 		}
 		$alternate ^= 1;
-		print "<td title=\"$co{'age_string_age'}\"><i>$co{'age_string_date'}</i></td>\n" .
-		      # shortlog uses      chop_str($co{'author_name'}, 10)
-		      "<td><i>" . esc_html(chop_str($co{'author_name'}, 15, 3)) . "</i></td>\n" .
+		print "<td title=\"$co->{'age_string_age'}\"><i>$co->{'age_string_date'}</i></td>\n" .
+		      # shortlog uses      chop_str($co->{'author_name'}, 10)
+		      "<td><i>" . esc_html(chop_str($co->{'author_name'}, 15, 3)) . "</i></td>\n" .
 		      "<td>";
-		# originally git_history used chop_str($co{'title'}, 50)
-		print format_subject_html($co{'title'}, $co{'title_short'},
+		# originally git_history used chop_str($co->{'title'}, 50)
+		print format_subject_html($co->{'title'}, $co->{'title_short'},
 		                          href(action=>"commit", hash=>$commit), $ref);
 		print "</td>\n" .
 		      "<td class=\"link\">" .
