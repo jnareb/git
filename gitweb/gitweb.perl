@@ -1131,6 +1131,13 @@ sub git_get_refs_list {
 #
 # parse_rev_list parameters are passed to git-rev-list, so they should
 # include at least starting revision; just in case we default to HEAD
+#
+# if you want in parsed info to have full equivalent of first generating
+# list of interesting revisions, then calling parse_commit on each of revs,
+# i.e. if you want to have full parent info which includes grafts,
+# you have to include '--parents' in the parse_rev_list parameters;
+# it is excluded by default as it changes notion which revs are interesting
+# e.g. '--full-history' with '--parents' include EVERY SINGLE MERGE.
 sub parse_rev_list {
 	my @rev_opts = @_;
 	my @revlist;
@@ -1138,7 +1145,7 @@ sub parse_rev_list {
 	@rev_opts = ("HEAD") unless @rev_opts;
 
 	local $/ = "\0";
-	open my $fd, "-|", git_cmd(), "rev-list", "--header", "--parents", @rev_opts
+	open my $fd, "-|", git_cmd(), "rev-list", "--header", @rev_opts
 		or return \@revlist;
 
 	while (my $revinfo = <$fd>) {
