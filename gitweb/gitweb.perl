@@ -2512,7 +2512,8 @@ sub git_summary {
 	# or make project git URL from git base URL and project name
 	my $url_tag = "URL";
 	my @url_list = git_get_project_url_list($project);
-	@url_list = map { "$_/$project" } @git_base_url_list unless @url_list;
+	@url_list = map { $_ ? "$_/$project" : () }
+		@git_base_url_list unless @url_list;
 	foreach my $git_url (@url_list) {
 		next unless $git_url;
 		print "<tr><td>$url_tag</td><td>$git_url</td></tr>\n";
