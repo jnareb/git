@@ -1840,11 +1840,11 @@ sub git_print_tree_entry {
 sub git_difftree_body {
 	my ($difftree, $hash, $parent) = @_;
 
-	print "<div class=\"list_head\">\n";
 	if ($#{$difftree} > 10) {
+		print "<div class=\"list_head\">\n";
 		print(($#{$difftree} + 1) . " files changed:\n");
+		print "</div>\n";
 	}
-	print "</div>\n";
 
 	print "<table class=\"diff_tree\">\n";
 	my $alternate = 1;
@@ -2049,9 +2049,9 @@ sub git_patchset_body {
 			}
 			$patch_idx++;
 
-			# for now, no extended header, hence we skip empty patches
-			# companion to	next LINE if $in_header;
-			if ($diffinfo->{'from_id'} eq $diffinfo->{'to_id'}) { # no change
+			# for now we skip empty patches
+			if ($diffinfo->{'from_id'} eq $diffinfo->{'to_id'}) {
+				# no change, empty patch
 				$in_header = 1;
 				next LINE;
 			}
@@ -3482,12 +3482,14 @@ sub git_commitdiff {
 		git_print_page_nav('commitdiff','', $hash,$co{'tree'},$hash, $formats_nav);
 		git_print_header_div('commit', esc_html($co{'title'}) . $ref, $hash);
 		git_print_authorship(\%co);
-		print "<div class=\"page_body\">\n";
+
 		if (@{$co{'comment'}} > 1) {
-			print "<div class=\"log\">\n";
+			print "<div class=\"commitdiff_log\">\n";
 			git_print_log($co{'comment'}, -final_empty_line=> 1, -remove_title => 1);
-			print "</div>\n"; # class="log"
+			print "</div>\n"; # class="commitdiff_log"
 		}
+
+		print "<div class=\"page_body\">\n";
 
 	} elsif ($format eq 'plain') {
 		my $refs = git_get_references("tags");

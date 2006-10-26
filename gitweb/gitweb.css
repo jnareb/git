@@ -100,7 +100,7 @@ span.age {
 	font-style: italic;
 }
 
-div.page_body span.signoff {
+span.signoff {
 	color: #888888;
 }
 
@@ -114,7 +114,7 @@ div.log_link {
 	width: 136px;
 }
 
-div.list_head {
+div.diff_tree_head {
 	padding: 6px 8px 4px;
 	border: solid #d9d8d1;
 	border-width: 1px 0px 0px;
@@ -126,6 +126,18 @@ div.author_date {
 	border: solid #d9d8d1;
 	border-width: 0px 0px 1px 0px;
 	font-style: italic;
+}
+
+div.commitdiff_log {
+	padding: 8px;
+	border: solid #d9d8d1;
+	border-width: 0px 0px 1px 0px;
+}
+
+div.patchset {
+	padding-top: 8px;
+	border: solid #d9d8d1;
+	border-width: 1px 0px 0px 0px;
 }
 
 a.list {
