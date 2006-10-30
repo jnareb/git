@@ -567,7 +567,7 @@ sub esc_html {
 sub esc_path {
 	my $str = shift;
 	$str = esc_html($str);
-	$str =~ s/[[:cntrl:]\a\b\e\f\n\r\t\011]/?/g; # like --hide-control-chars in ls
+	$str =~ s/[[:cntrl:]\a\b\e\f\n\r\t\011]/&iquest;/g; # like --hide-control-chars in ls
 	return $str;
 }
 
