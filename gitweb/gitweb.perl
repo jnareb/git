@@ -1967,9 +1967,6 @@ sub git_difftree_body {
 				print $cgi->a({-href => "#patch$patchno"}, "patch");
 				print " | ";
 			}
-			print $cgi->a({-href => href(action=>"blob", hash=>$diff{'from_id'},
-			                             hash_base=>$parent, file_name=>$diff{'file'})},
-				      "blob") . " | ";
 			print $cgi->a({-href => href(action=>"blame", hash_base=>$parent,
 			                             file_name=>$diff{'file'})},
 			              "blame") . " | ";
@@ -2015,9 +2012,6 @@ sub git_difftree_body {
 				}
 				print " | ";
 			}
-			print $cgi->a({-href => href(action=>"blob", hash=>$diff{'to_id'},
-						     hash_base=>$hash, file_name=>$diff{'file'})},
-				      "blob") . " | ";
 			print $cgi->a({-href => href(action=>"blame", hash_base=>$hash,
 			                             file_name=>$diff{'file'})},
 			              "blame") . " | ";
@@ -2058,9 +2052,6 @@ sub git_difftree_body {
 				}
 				print " | ";
 			}
-			print $cgi->a({-href => href(action=>"blob", hash=>$diff{'from_id'},
-						     hash_base=>$parent, file_name=>$diff{'from_file'})},
-				      "blob") . " | ";
 			print $cgi->a({-href => href(action=>"blame", hash_base=>$parent,
 			                             file_name=>$diff{'from_file'})},
 			              "blame") . " | ";
