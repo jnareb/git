@@ -2114,7 +2114,7 @@ sub git_patchset_body {
 			$patch_idx++;
 
 			# print "git diff" header
-			$patch_line =~ s!^(diff (.*?) )a/.*$!$1!;
+			$patch_line =~ s!^(diff (.*?) )"?a/.*$!$1!;
 			if ($from{'href'}) {
 				$patch_line .= $cgi->a({-href => $from{'href'}, -class => "path"},
 				                       'a/' . esc_path($from{'file'}));
@@ -2191,7 +2191,7 @@ sub git_patchset_body {
 				if ($to{'href'}) {
 					$patch_line = '+++ b/' .
 					              $cgi->a({-href=>$to{'href'}, -class=>"path"},
-					                      esc_html($to{'file'}));
+					                      esc_path($to{'file'}));
 				}
 				print "<div class=\"diff to_file\">$patch_line</div>\n";
 
