@@ -1998,19 +1998,19 @@ sub git_difftree_body {
 			print "</td>\n";
 			print "<td>$mode_chnge</td>\n";
 			print "<td class=\"link\">";
-			if ($diff{'to_id'} ne $diff{'from_id'}) { # modified
-				if ($action eq 'commitdiff') {
-					# link to patch
-					$patchno++;
-					print $cgi->a({-href => "#patch$patchno"}, "patch");
-				} else {
-					print $cgi->a({-href => href(action=>"blobdiff",
-					                             hash=>$diff{'to_id'}, hash_parent=>$diff{'from_id'},
-					                             hash_base=>$hash, hash_parent_base=>$parent,
-					                             file_name=>$diff{'file'})},
-					              "diff");
-				}
-				print " | ";
+			if ($action eq 'commitdiff') {
+				# link to patch
+				$patchno++;
+				print $cgi->a({-href => "#patch$patchno"}, "patch") .
+				      " | ";
+			} elsif ($diff{'to_id'} ne $diff{'from_id'}) {
+				# "commit" view and modified file (not onlu mode changed)
+				print $cgi->a({-href => href(action=>"blobdiff",
+				                             hash=>$diff{'to_id'}, hash_parent=>$diff{'from_id'},
+				                             hash_base=>$hash, hash_parent_base=>$parent,
+				                             file_name=>$diff{'file'})},
+				              "diff") .
+				      " | ";
 			}
 			print $cgi->a({-href => href(action=>"blame", hash_base=>$hash,
 			                             file_name=>$diff{'file'})},
@@ -2038,19 +2038,19 @@ sub git_difftree_body {
 			              -class => "list"}, esc_path($diff{'from_file'})) .
 			      " with " . (int $diff{'similarity'}) . "% similarity$mode_chng]</span></td>\n" .
 			      "<td class=\"link\">";
-			if ($diff{'to_id'} ne $diff{'from_id'}) {
-				if ($action eq 'commitdiff') {
-					# link to patch
-					$patchno++;
-					print $cgi->a({-href => "#patch$patchno"}, "patch");
-				} else {
-					print $cgi->a({-href => href(action=>"blobdiff",
-					                             hash=>$diff{'to_id'}, hash_parent=>$diff{'from_id'},
-					                             hash_base=>$hash, hash_parent_base=>$parent,
-					                             file_name=>$diff{'to_file'}, file_parent=>$diff{'from_file'})},
-					              "diff");
-				}
-				print " | ";
+			if ($action eq 'commitdiff') {
+				# link to patch
+				$patchno++;
+				print $cgi->a({-href => "#patch$patchno"}, "patch") .
+				      " | ";
+			} elsif ($diff{'to_id'} ne $diff{'from_id'}) {
+				# "commit" view and modified file (not only pure rename or copy)
+				print $cgi->a({-href => href(action=>"blobdiff",
+				                             hash=>$diff{'to_id'}, hash_parent=>$diff{'from_id'},
+				                             hash_base=>$hash, hash_parent_base=>$parent,
+				                             file_name=>$diff{'to_file'}, file_parent=>$diff{'from_file'})},
+				              "diff") .
+				      " | ";
 			}
 			print $cgi->a({-href => href(action=>"blame", hash_base=>$parent,
 			                             file_name=>$diff{'from_file'})},
@@ -2072,7 +2072,6 @@ sub git_patchset_body {
 	my $patch_idx = 0;
 	my $in_header = 0;
 	my $patch_found = 0;
-	my $skip_patch = 0;
 	my $diffinfo;
 	my (%from, %to);
 
@@ -2084,8 +2083,6 @@ sub git_patchset_body {
 
 		if ($patch_line =~ m/^diff /) { # "git diff" header
 			# beginning of patch (in patchset)
-			$skip_patch = 0;
-
 			if ($patch_found) {
 				# close previous patch
 				print "</div>\n"; # class="patch"
@@ -2116,13 +2113,6 @@ sub git_patchset_body {
 			}
 			$patch_idx++;
 
-			# for now we skip empty patches
-			if ($diffinfo->{'from_id'} eq $diffinfo->{'to_id'}) { # no change
-				$in_header = 1;
-				$skip_patch = 0;
-				next LINE;
-			}
-
 			# print "git diff" header
 			$patch_line =~ s!^(diff (.*?) )a/.*$!$1!;
 			if ($from{'href'}) {
@@ -2143,10 +2133,7 @@ sub git_patchset_body {
 			print "<div class=\"diff extended_header\">\n";
 			$in_header = 1;
 			next LINE;
-		} else {
-			# actual skipping of empty patches
-			next LINE if $skip_patch;
-		} # start of patch in patchset
+		}
 
 		if ($in_header) {
 			if ($patch_line !~ m/^---/) {
