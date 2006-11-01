@@ -830,6 +830,7 @@ sub format_subject_html {
 
 sub format_diff_line {
 	my $line = shift;
+	my ($from, $to) = @_;
 	my $char = substr($line, 0, 1);
 	my $diff_class = "";
 
@@ -845,6 +846,21 @@ sub format_diff_line {
 		$diff_class = " incomplete";
 	}
 	$line = untabify($line);
+	if ($from && $to && $line =~ m/^\@{2} /) {
+		my ($from_text, $from_start, $from_lines, $to_text, $to_start, $to_lines, $section) =
+			$line =~ m/^\@{2} (-(\d+),(\d+)) (\+(\d+),(\d+)) \@{2}(.*)$/;
+		if ($from->{'href'}) {
+			$from_text = $cgi->a({-href=>"$from->{'href'}#l$from_start",
+			                     -class=>"list"}, $from_text);
+		}
+		if ($to->{'href'}) {
+			$to_text   = $cgi->a({-href=>"$to->{'href'}#l$to_start",
+			                     -class=>"list"}, $to_text);
+		}
+		$line = "<span class=\"chunk_info\">@@ $from_text $to_text @@</span>" .
+		        "<span class=\"section\">" . esc_html($section, -nbsp=>1) . "</span>";
+		return "<div class=\"diff$diff_class\">$line</div>\n";
+	}
 	return "<div class=\"diff$diff_class\">" . esc_html($line, -nbsp=>1) . "</div>\n";
 }
 
@@ -2205,7 +2221,7 @@ sub git_patchset_body {
 			next LINE;
 		}
 
-		print format_diff_line($patch_line);
+		print format_diff_line($patch_line, \%from, \%to);
 	}
 	print "</div>\n" if $patch_found; # class="patch"
 
