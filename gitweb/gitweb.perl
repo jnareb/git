@@ -572,7 +572,7 @@ sub esc_html ($;%) {
 sub esc_path {
 	my $str = shift;
 	$str = esc_html($str);
-	$str =~ s/[[:cntrl:]\a\b\e\f\n\r\t\011]/&iquest;/g; # like --hide-control-chars in ls
+	$str =~ s!([[:cntrl:]])!sprintf('<span class="cntrl">&#%04d;</span>', 9216+ord($1))!eg;
 	return $str;
 }
 
@@ -2105,6 +2105,10 @@ sub git_patchset_body {
 		if ($patch_line =~ m/^diff /) { # "git diff" header
 			# beginning of patch (in patchset)
 			if ($patch_found) {
+				# close extended header for empty patch
+				if ($in_header) {
+					print "</div>\n" # class="diff extended_header"
+				}
 				# close previous patch
 				print "</div>\n"; # class="patch"
 			} else {
