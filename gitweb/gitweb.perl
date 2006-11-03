@@ -1136,9 +1136,9 @@ sub parse_date {
 	$date{'hour_local'} = $hour;
 	$date{'minute_local'} = $min;
 	$date{'tz_local'} = $tz;
-	$date{'iso-tz'} = sprintf ("%04d-%02d-%02d %02d:%02d:%02d %s",
-				   1900+$year, $mon+1, $mday,
-				   $hour, $min, $sec, $tz);
+	$date{'iso-tz'} = sprintf("%04d-%02d-%02d %02d:%02d:%02d %s",
+	                          1900+$year, $mon+1, $mday,
+	                          $hour, $min, $sec, $tz);
 	return %date;
 }
 
@@ -1613,7 +1613,7 @@ EOF
 		      $cgi->hidden(-name => "a") . "\n" .
 		      $cgi->hidden(-name => "h") . "\n" .
 		      $cgi->popup_menu(-name => 'st', -default => 'commit',
-				       -values => ['commit', 'author', 'committer', 'pickaxe']) .
+		                       -values => ['commit', 'author', 'committer', 'pickaxe']) .
 		      $cgi->sup($cgi->a({-href => href(action=>"search_help")}, "?")) .
 		      " search:\n",
 		      $cgi->textfield(-name => "s", -value => $searchtext) . "\n" .
@@ -1873,13 +1873,13 @@ sub git_print_tree_entry {
 			        -class => "list"}, esc_path($t->{'name'})) . "</td>\n";
 		print "<td class=\"link\">";
 		print $cgi->a({-href => href(action=>"blob", hash=>$t->{'hash'},
-					     file_name=>"$basedir$t->{'name'}", %base_key)},
-			      "blob");
+		                             file_name=>"$basedir$t->{'name'}", %base_key)},
+		              "blob");
 		if ($have_blame) {
 			print " | " .
 			      $cgi->a({-href => href(action=>"blame", hash=>$t->{'hash'},
-				                           file_name=>"$basedir$t->{'name'}", %base_key)},
-				            "blame");
+			                             file_name=>"$basedir$t->{'name'}", %base_key)},
+			              "blame");
 		}
 		if (defined $hash_base) {
 			print " | " .
@@ -1901,8 +1901,8 @@ sub git_print_tree_entry {
 		print "</td>\n";
 		print "<td class=\"link\">";
 		print $cgi->a({-href => href(action=>"tree", hash=>$t->{'hash'},
-					     file_name=>"$basedir$t->{'name'}", %base_key)},
-			      "tree");
+		                             file_name=>"$basedir$t->{'name'}", %base_key)},
+		              "tree");
 		if (defined $hash_base) {
 			print " | " .
 			      $cgi->a({-href => href(action=>"history", hash_base=>$hash_base,
@@ -2728,7 +2728,7 @@ HTML
 		$_ = <$fd>;
 		last unless defined $_;
 		my ($full_rev, $orig_lineno, $lineno, $group_size) =
-		    /^([0-9a-f]{40}) (\d+) (\d+)(?: (\d+))?$/;
+			/^([0-9a-f]{40}) (\d+) (\d+)(?: (\d+))?$/;
 		if (!exists $metainfo{$full_rev}) {
 			$metainfo{$full_rev} = {};
 		}
@@ -2743,7 +2743,7 @@ HTML
 		my $rev = substr($full_rev, 0, 8);
 		my $author = $meta->{'author'};
 		my %date = parse_date($meta->{'author-time'},
-				      $meta->{'author-tz'});
+		                      $meta->{'author-tz'});
 		my $date = $date{'iso-tz'};
 		if ($group_size) {
 			$current_color = ++$current_color % $num_colors;
@@ -2755,19 +2755,19 @@ HTML
 			print " rowspan=\"$group_size\"" if ($group_size > 1);
 			print ">";
 			print $cgi->a({-href => href(action=>"commit",
-						     hash=>$full_rev,
-						     file_name=>$file_name)},
-				      esc_html($rev));
+			                             hash=>$full_rev,
+			                             file_name=>$file_name)},
+			              esc_html($rev));
 			print "</td>\n";
 		}
 		my $blamed = href(action => 'blame',
-				  file_name => $meta->{'filename'},
-				  hash_base => $full_rev);
+		                  file_name => $meta->{'filename'},
+		                  hash_base => $full_rev);
 		print "<td class=\"linenr\">";
-		print $cgi->a({ -href => "$blamed#l$orig_lineno",
-				-id => "l$lineno",
-				-class => "linenr" },
-			      esc_html($lineno));
+		print $cgi->a({-href => "$blamed#l$orig_lineno",
+		               -id => "l$lineno",
+		               -class => "linenr"},
+		              esc_html($lineno));
 		print "</td>";
 		print "<td class=\"pre\">" . esc_html($data) . "</td>\n";
 		print "</tr>\n";
@@ -2803,7 +2803,7 @@ sub git_blame {
 		        "blob") .
 		" | " .
 		$cgi->a({-href => href(action=>"history", hash=>$hash, hash_base=>$hash_base, file_name=>$file_name)},
-			"history") .
+		        "history") .
 		" | " .
 		$cgi->a({-href => href(action=>"blame", file_name=>$file_name)},
 		        "HEAD");
@@ -3187,9 +3187,9 @@ sub git_log {
 		next if !%co;
 		my %ad = parse_date($co{'author_epoch'});
 		git_print_header_div('commit',
-		               "<span class=\"age\">$co{'age_string'}</span>" .
-		               esc_html($co{'title'}) . $ref,
-		               $commit);
+		                     "<span class=\"age\">$co{'age_string'}</span>" .
+		                     esc_html($co{'title'}) . $ref,
+		                     $commit);
 		print "<div class=\"title_text\">\n" .
 		      "<div class=\"log_link\">\n" .
 		      $cgi->a({-href => href(action=>"commit", hash=>$commit)}, "commit") .
