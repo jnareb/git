@@ -1800,14 +1800,14 @@ EOF
 		      $cgi->hidden(-name => "a") . "\n" .
 		      $cgi->hidden(-name => "h") . "\n" .
 		      $cgi->popup_menu(-name => 'st', -default => 'commit',
-				       -values => ['commit', 'author', 'committer', 'pickaxe']) .
+		                       -values => ['commit', 'author', 'committer', 'pickaxe']) .
 		      $cgi->sup($cgi->a({-href => href(action=>"search_help")}, "?")) .
 		      " search:\n",
 		      $cgi->textfield(-name => "s", -value => $searchtext) . "\n" .
-		      "</div>" .
+		      "</div>" . # class="search"
 		      $cgi->end_form() . "\n";
 	}
-	print "</div>\n";
+	print "</div>\n"; # class="page_header"
 }
 
 sub git_footer_html {
@@ -1827,7 +1827,7 @@ sub git_footer_html {
 		print $cgi->a({-href => href(project=>undef, action=>"project_index"),
 		              -class => "rss_logo"}, "TXT") . "\n";
 	}
-	print "</div>\n" ;
+	print "</div>\n" ; # class="page_footer"
 
 	if (-f $site_footer) {
 		open (my $fd, $site_footer);
@@ -1887,7 +1887,7 @@ sub git_print_page_nav {
 		       $_ : $cgi->a({-href => href(%{$arg{$_}})}, "$_")
 		 } @navs);
 	print "<br/>\n$extra<br/>\n" .
-	      "</div>\n";
+	      "</div>\n"; # class="page_nav"
 }
 
 sub format_paging_nav {
@@ -1934,7 +1934,7 @@ sub git_print_header_div {
 	print "<div class=\"header\">\n" .
 	      $cgi->a({-href => href(%args), -class => "title"},
 	      $title ? $title : $action) .
-	      "\n</div>\n";
+	      "\n</div>\n"; # class="header"
 }
 
 #sub git_print_authorship (\%) {
@@ -1952,7 +1952,7 @@ sub git_print_authorship {
 		printf(" (%02d:%02d %s)",
 		       $ad{'hour_local'}, $ad{'minute_local'}, $ad{'tz_local'});
 	}
-	print "]</div>\n";
+	print "]</div>\n"; # class="author_date"
 }
 
 sub git_print_page_path {
@@ -1990,7 +1990,7 @@ sub git_print_page_path {
 			print esc_path($basename);
 		}
 	}
-	print "<br/></div>\n";
+	print "<br/></div>\n"; # class="page_path"
 }
 
 # sub git_print_log (\@;%) {
@@ -2188,7 +2188,7 @@ sub git_difftree_body {
 	if ($#{$difftree} > 10) {
 		print(($#{$difftree} + 1) . " files changed:\n");
 	}
-	print "</div>\n";
+	print "</div>\n"; # class="list_head"
 
 	print "<table class=\"diff_tree\">\n";
 	my $alternate = 1;
@@ -2971,7 +2971,7 @@ sub git_project_list {
 		open (my $fd, $home_text);
 		print <$fd>;
 		close $fd;
-		print "</div>\n";
+		print "</div>\n"; # class="index_include"
 	}
 	git_project_list_body(\@list, $order);
 	git_footer_html();
@@ -3123,14 +3123,14 @@ sub git_tag {
 			"</td></tr>\n";
 	}
 	print "</table>\n\n" .
-	      "</div>\n";
+	      "</div>\n"; # class="title_text"
 	print "<div class=\"page_body\">";
 	my $comment = $tag{'comment'};
 	foreach my $line (@$comment) {
 		chomp $line;
 		print esc_html($line, -nbsp=>1) . "<br/>\n";
 	}
-	print "</div>\n";
+	print "</div>\n"; # class="page_body"
 	git_footer_html();
 }
 
@@ -3201,7 +3201,7 @@ HTML
 		my $rev = substr($full_rev, 0, 8);
 		my $author = $meta->{'author'};
 		my %date = parse_date($meta->{'author-time'},
-				      $meta->{'author-tz'});
+		                      $meta->{'author-tz'});
 		my $date = $date{'iso-tz'};
 		if ($group_size) {
 			$current_color = ++$current_color % $num_colors;
@@ -3213,9 +3213,9 @@ HTML
 			print " rowspan=\"$group_size\"" if ($group_size > 1);
 			print ">";
 			print $cgi->a({-href => href(action=>"commit",
-						     hash=>$full_rev,
-						     file_name=>$file_name)},
-				      esc_html($rev));
+			                             hash=>$full_rev,
+			                             file_name=>$file_name)},
+			              esc_html($rev));
 			print "</td>\n";
 		}
 		open (my $dd, "-|", git_cmd(), "rev-parse", "$full_rev^")
@@ -3224,19 +3224,19 @@ HTML
 		close $dd;
 		chomp($parent_commit);
 		my $blamed = href(action => 'blame',
-				  file_name => $meta->{'filename'},
-				  hash_base => $parent_commit);
+		                  file_name => $meta->{'filename'},
+		                  hash_base => $parent_commit);
 		print "<td class=\"linenr\">";
 		print $cgi->a({ -href => "$blamed#l$orig_lineno",
-				-id => "l$lineno",
-				-class => "linenr" },
-			      esc_html($lineno));
+		                -id => "l$lineno",
+		                -class => "linenr" },
+		              esc_html($lineno));
 		print "</td>";
 		print "<td class=\"pre\">" . esc_html($data) . "</td>\n";
 		print "</tr>\n";
 	}
 	print "</table>\n";
-	print "</div>";
+	print "</div>\n"; # class="page_body"
 	close $fd
 		or print "Reading blob failed\n";
 	git_footer_html();
@@ -3335,7 +3335,7 @@ HTML
 	print "</table>\n\n";
 	close $fd
 		or print "Reading blob failed.\n";
-	print "</div>";
+	print "</div>"; # class="page_body"
 	git_footer_html();
 }
 
@@ -3465,7 +3465,7 @@ sub git_blob {
 		git_print_header_div('commit', esc_html($co{'title'}), $hash_base);
 	} else {
 		print "<div class=\"page_nav\">\n" .
-		      "<br/><br/></div>\n" .
+		      "<br/><br/></div>\n" . # class="page_nav"
 		      "<div class=\"title\">$hash</div>\n";
 	}
 	git_print_page_path($file_name, "blob", $hash_base);
@@ -3491,7 +3491,7 @@ sub git_blob {
 	}
 	close $fd
 		or print "Reading blob failed.\n";
-	print "</div>";
+	print "</div>"; # class="page_body"
 	git_footer_html();
 }
 
@@ -3542,7 +3542,7 @@ sub git_tree {
 	} else {
 		undef $hash_base;
 		print "<div class=\"page_nav\">\n";
-		print "<br/><br/></div>\n";
+		print "<br/><br/></div>\n"; # class="page_nav"
 		print "<div class=\"title\">$hash</div>\n";
 	}
 	if (defined $file_name) {
@@ -3594,7 +3594,7 @@ sub git_tree {
 		print "</tr>\n";
 	}
 	print "</table>\n" .
-	      "</div>";
+	      "</div>"; # class="page_body";
 	git_footer_html();
 }
 
@@ -3671,19 +3671,19 @@ sub git_log {
 		      " | " .
 		      $cgi->a({-href => href(action=>"tree", hash=>$commit, hash_base=>$commit)}, "tree") .
 		      "<br/>\n" .
-		      "</div>\n" .
+		      "</div>\n" . # class="log_link"
 		      "<i>" . esc_html($co{'author_name'}) .  " [$ad{'rfc2822'}]</i><br/>\n" .
-		      "</div>\n";
+		      "</div>\n";  # class="title_text"
 
 		print "<div class=\"log_body\">\n";
 		git_print_log($co{'comment'}, -final_empty_line=> 1);
-		print "</div>\n";
+		print "</div>\n"; # class="log_body"
 	}
 	if ($#commitlist >= 100) {
 		print "<div class=\"page_nav\">\n";
 		print $cgi->a({-href => href(action=>"log", hash=>$hash, page=>$page+1),
 			       -accesskey => "n", -title => "Alt-n"}, "next");
-		print "</div>\n";
+		print "</div>\n"; # class="page_nav"
 	}
 	git_footer_html();
 }
@@ -3808,11 +3808,11 @@ sub git_commit {
 		      "</tr>\n";
 	}
 	print "</table>".
-	      "</div>\n";
+	      "</div>\n"; # class="title_text"
 
 	print "<div class=\"page_body\">\n";
 	git_print_log($co{'comment'});
-	print "</div>\n";
+	print "</div>\n"; # class="page_body"
 
 	if (@$parents <= 1) {
 		# do not output difftree/whatchanged for merges
