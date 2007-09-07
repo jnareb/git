@@ -1963,7 +1963,7 @@ sub parse_difftree_raw_line {
 		$res{'to_mode'} = $2;
 		$res{'from_id'} = $3;
 		$res{'to_id'} = $4;
-		$res{'status'} = $5;
+		$res{'status'} = $res{'status_str'} = $5;
 		$res{'similarity'} = $6;
 		if ($res{'status'} eq 'R' || $res{'status'} eq 'C') { # renamed or copied
 			($res{'from_file'}, $res{'to_file'}) = map { unquote($_) } split("\t", $7);
@@ -1979,6 +1979,7 @@ sub parse_difftree_raw_line {
 		$res{'to_mode'} = pop @{$res{'from_mode'}};
 		$res{'from_id'} = [ split(' ', $3) ];
 		$res{'to_id'} = pop @{$res{'from_id'}};
+		$res{'status_str'} = $4;
 		$res{'status'} = [ split('', $4) ];
 		$res{'to_file'} = unquote($5);
 	}
@@ -3112,6 +3113,7 @@ sub git_patchset_body {
 	my $patch_line;
 	my $diffinfo;
 	my (%from, %to);
+	my $patches_per_difftree_line = 1;
 
 	print "<div class=\"patchset\">\n";
 
@@ -3124,42 +3126,13 @@ sub git_patchset_body {
 
  PATCH:
 	while ($patch_line) {
-		my @diff_header;
-		my ($from_id, $to_id);
-
-		# git diff header
-		#assert($patch_line =~ m/^diff /) if DEBUG;
-		#assert($patch_line !~ m!$/$!) if DEBUG; # is chomp-ed
-		$patch_number++;
-		push @diff_header, $patch_line;
-
-		# extended diff header
-	EXTENDED_HEADER:
-		while ($patch_line = <$fd>) {
-			chomp $patch_line;
-
-			last EXTENDED_HEADER if ($patch_line =~ m/^--- |^diff /);
-
-			if ($patch_line =~ m/^index ([0-9a-fA-F]{40})..([0-9a-fA-F]{40})/) {
-				$from_id = $1;
-				$to_id   = $2;
-			} elsif ($patch_line =~ m/^index ((?:[0-9a-fA-F]{40},)+[0-9a-fA-F]{40})..([0-9a-fA-F]{40})/) {
-				$from_id = [ split(',', $1) ];
-				$to_id   = $2;
-			}
-
-			push @diff_header, $patch_line;
-		}
-		my $last_patch_line = $patch_line;
 
 		# check if current patch belong to current raw line
 		# and parse raw git-diff line if needed
-		if (defined $diffinfo &&
-		    defined $from_id && defined $to_id &&
-		    from_ids_eq($diffinfo->{'from_id'}, $from_id) &&
-		    $diffinfo->{'to_id'} eq $to_id) {
+		if ($patches_per_difftree_line > 1) {
 			# this is continuation of a split patch
 			print "<div class=\"patch cont\">\n";
+			$patches_per_difftree_line--;
 		} else {
 			# advance raw git-diff output if needed
 			$patch_idx++ if defined $diffinfo;
@@ -3167,7 +3140,7 @@ sub git_patchset_body {
 			# compact combined diff output can have some patches skipped
 			# find which patch (using pathname of result) we are at now
 			my $to_name;
-			if ($diff_header[0] =~ m!^diff --cc "?(.*)"?$!) {
+			if ($patch_line =~ m!^diff --cc "?(.*)"?$!) {
 				$to_name = $1;
 			}
 
@@ -3191,6 +3164,7 @@ sub git_patchset_body {
 				}
 			} until (!defined $to_name || $to_name eq $diffinfo->{'to_file'} ||
 			         $patch_idx > $#$difftree);
+
 			# modifies %from, %to hashes
 			parse_from_to_diffinfo($diffinfo, \%from, \%to, @hash_parents);
 			if ($diffinfo->{'nparents'}) {
@@ -3232,32 +3206,43 @@ sub git_patchset_body {
 			# this is first patch for raw difftree line with $patch_idx index
 			# we index @$difftree array from 0, but number patches from 1
 			print "<div class=\"patch\" id=\"patch". ($patch_idx+1) ."\">\n";
+
+			# typechange diff with 'T' status has two patches per one raw line
+			if ($diffinfo->{'status_str'} =~ /T/) {
+				$patches_per_difftree_line = 2;
+			}
 		}
 
+		# git diff header
+		#assert($patch_line =~ m/^diff /) if DEBUG;
+		#assert($patch_line !~ m!$/$!) if DEBUG; # is chomp-ed
+		$patch_number++;
 		# print "git diff" header
-		$patch_line = shift @diff_header;
 		print format_git_diff_header_line($patch_line, $diffinfo,
 		                                  \%from, \%to);
 
 		# print extended diff header
-		print "<div class=\"diff extended_header\">\n" if (@diff_header > 0);
+		print "<div class=\"diff extended_header\">\n";
 	EXTENDED_HEADER:
-		foreach $patch_line (@diff_header) {
+		while ($patch_line = <$fd>) {
+			chomp $patch_line;
+
+			last EXTENDED_HEADER if ($patch_line =~ m/^--- |^diff /);
+
 			print format_extended_diff_header_line($patch_line, $diffinfo,
 			                                       \%from, \%to);
 		}
-		print "</div>\n"  if (@diff_header > 0); # class="diff extended_header"
+		print "</div>\n"; # class="diff extended_header"
 
 		# from-file/to-file diff header
-		$patch_line = $last_patch_line;
 		if (! $patch_line) {
 			print "</div>\n"; # class="patch"
 			last PATCH;
 		}
 		next PATCH if ($patch_line =~ m/^diff /);
 		#assert($patch_line =~ m/^---/) if DEBUG;
-		#assert($patch_line eq $last_patch_line) if DEBUG;
 
+		my $last_patch_line = $patch_line;
 		$patch_line = <$fd>;
 		chomp $patch_line;
 		#assert($patch_line =~ m/^\+\+\+/) if DEBUG;
