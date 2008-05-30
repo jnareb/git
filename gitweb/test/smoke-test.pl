@@ -25,9 +25,9 @@ if (@ARGV != 1 or $ARGV[0] =~ /^-/) {
     exit 2;
 }
 
-my $base_url = $ARGV[0];  # "http://host/path/gitweb.cgi?p=test.git"
+my $base_url = $ARGV[0];
 # $output_dir is a temporary directory for wget to store its output
-# files.  (-O/dev/null does not work with --recursive.)
+# files.
 my $output_dir = "smoke-test.$$.tmp";
 my $log_file = "smoke-test.$$.log";
 # The option -o- does not work with wget 1.11.2, hence 2>&1.  Don't
@@ -55,7 +55,7 @@ foreach my $output_file (glob "$output_dir/*") {
         last;
     }
 }
-# Check wget's log file.
+# Check wget's log file for 4xx/5xx errors.
 if (not $error_message) {
     open LOG, $log_file or die "Cannot open $log_file: $!";
     my $log = join '', <LOG>;
@@ -72,9 +72,9 @@ if ($error_message) {
 } else {
     print "Everything OK, no error detected.\n";
     print "Log file at $log_file\n";
-    # Clean up.
-    rmtree $output_dir;
-    # Don't delete $log_file, since we may need to verify if things have
-    # been downloaded at all.  This might become a command-line option..
+    # Don't delete $log_file and $output_dir, since we may need to
+    # verify if things have been downloaded at all and we may need to
+    # diff different trees.  This might become a command-line option.
+    #rmtree $output_dir;
     #unlink $log_file;
 }
