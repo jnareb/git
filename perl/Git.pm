@@ -8,7 +8,7 @@ Git - Perl interface to the Git version control system
 package Git;
 
 use strict;
-
+use Data::Dumper;
 
 BEGIN {
 
@@ -43,6 +43,10 @@ $VERSION = '0.01';
   my $tempfile = tempfile();
   my $size = $repo->cat_blob($sha1, $tempfile);
 
+  my $head_commit_sha1 = $repo->get_hash('HEAD');  # see git-rev-parse --help
+  my $file_blob_sha1   = $repo->get_hash('HEAD:path/file.txt');
+
+  $repo->get_type("HEAD") eq "commit';
 =cut
 
 
@@ -210,7 +214,7 @@ sub repository {
 			} catch Git::Error::Command with {
 				# Mimick git-rev-parse --git-dir error message:
 				throw Error::Simple('fatal: Not a git repository');
-			}
+			};
 
 			$opts{Repository} = abs_path($dir);
 		}
@@ -716,6 +720,64 @@ sub ident_person {
 	return "$ident[0] <$ident[1]>";
 }
 
+=item get_hash ( REVISION )
+
+Look up the object referred to by C<REVISION> and return its SHA1
+hash, or return undef if the lookup failed.  When passed a SHA1 hash,
+always return it even if it doesn't exist in the repository.
+
+Note that C<REVISION> can refer to a commit, file, tree, or tag
+object!  See git rev-parse --help, section "Specifying Revisions", for
+valid formats of the C<REVISION> parameter.
+
+=cut
+
+sub get_hash {
+	# We could allow for a list of revisions here.
+	my ($self, $rev_name) = @_;
+
+	my $hash;
+	try {
+		# The --quiet --verify options cause git-rev-parse to fail
+		# with exit status 1 (instead of 128) if the given revision
+		# name is not found, which enables us to distinguish not-found
+		# from serious errors.  The --default option works around
+		# git-rev-parse's lack of support for getopt style "--"
+		# separators (it would fail for tags named "--foo" without
+		# it).
+		$hash = $self->command_oneline("rev-parse", "--verify", "--quiet",
+					       "--default", $rev_name);
+	} catch Git::Error::Command with {
+		my $E = shift;
+		if ($E->value() == 1) {
+			# Revision name not found.
+			$hash = undef;
+		} else {
+			throw $E;
+		}
+	};
+	# Guard against unexpected output.
+	throw Error::Simple(
+		"get_hash: unexpected output for \"$rev_name\": $hash")
+	    if defined $hash and $hash !~ /^([0-9a-fA-F]{40})$/;
+	return $hash;
+}
+
+=item get_type ( REVISION )
+
+Return the type of the object referenced by C<REVISION> (a hash or a
+name); see get_hash for details on the C<REVISION> parameter.  Die if
+C<REVISION> does not refer to any object.
+
+The type returned is either "commit", "tree", "blob", or "tag".
+
+=cut
+
+sub get_type {
+	my ($self, $revision) = @_;
+
+	return $self->command_oneline("cat-file", "-t", $revision);
+}
 
 =item hash_object ( TYPE, FILENAME )
 
