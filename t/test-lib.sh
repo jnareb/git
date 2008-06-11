@@ -168,7 +168,7 @@ trap 'die' exit
 # environment variables to work around this.
 #
 # In particular, quoting isn't enough, as the path may contain the same quote
-# that we're using. 
+# that we're using.
 test_set_editor () {
 	FAKE_EDITOR="$1"
 	export FAKE_EDITOR
@@ -329,7 +329,7 @@ test_external () {
 			test_ok_ "$descr"
 		else
 			test_failure_ "$descr" "$@"
-	  	fi
+		fi
 	fi
 }
 
@@ -349,15 +349,15 @@ test_external_without_stderr () {
 		rm "$stderr"
 		test_ok_ "$descr"
 	else
-		if [ "$verbose" = t ]; then	    	
-		    output=`echo; echo Stderr is:; cat "$stderr"`
+		if [ "$verbose" = t ]; then
+			output=`echo; echo Stderr is:; cat "$stderr"`
 		else
-		    output=
+			output=
 		fi
 		# rm first in case test_failure exits.
 		rm "$stderr"
 		test_failure_ "$descr" "$@" "$output"
-        fi
+	fi
 }
 
 # This is not among top-level (test_expect_success | test_expect_failure)

@@ -10,7 +10,7 @@ use File::Path;
     for "software error" pages (which happen if gitweb dies).
 
     Usage: smoke-test.pl base_url
-    
+
     base_url is something like "http://localhost/path/gitweb.cgi",
     where gitweb.pl hosts only *one* *small* test repository (one commit)
     or this will take a very long time to run.

@@ -172,7 +172,7 @@ sub get_bidi_pipe {
 	}
 	return ($stdin, $stdout);
 }
-	
+
 # Return the first items of the git command line, for instance
 # qw(/usr/bin/git --git-dir=/path/to/repo.git).
 sub _get_git_cmd {
@@ -182,7 +182,7 @@ sub _get_git_cmd {
 
 
 
-=head2  
+=head2
 
 =item get_hash ( EXTENDED_OBJECT_IDENTIFIER )
 
