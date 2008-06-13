@@ -350,14 +350,14 @@ test_external_without_stderr () {
 		test_ok_ "$descr"
 	else
 		if [ "$verbose" = t ]; then
-			output=`echo; echo Stderr is:; cat "$stderr"`
+		    output=`echo; echo Stderr is:; cat "$stderr"`
 		else
-			output=
+		    output=
 		fi
 		# rm first in case test_failure exits.
 		rm "$stderr"
 		test_failure_ "$descr" "$@" "$output"
-	fi
+        fi
 }
 
 # This is not among top-level (test_expect_success | test_expect_failure)

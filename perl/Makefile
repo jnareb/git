@@ -27,6 +27,7 @@ $(makfile): ../GIT-CFLAGS Makefile
 	echo install: >> $@
 	echo '	mkdir -p $(instdir_SQ)' >> $@
 	echo '	$(RM) $(instdir_SQ)/Git.pm; cp Git.pm $(instdir_SQ)' >> $@
+	echo '	mkdir -p $(instdir_SQ)/Git; $(RM) $(instdir_SQ)/Git/*.pm; cp Git/*.pm $(instdir_SQ)/Git' >> $@
 	echo '	$(RM) $(instdir_SQ)/Error.pm; \
 	cp private-Error.pm $(instdir_SQ)/Error.pm' >> $@
 	echo instlibdir: >> $@

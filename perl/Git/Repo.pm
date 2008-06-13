@@ -17,6 +17,7 @@ use Carp qw( carp );
 use Carp::Always;
 use IPC::Open2 qw( open2 );
 use Data::Dumper; # for debugging
+use IO::Handle;
 
 our ($VERSION, @EXPORT, @EXPORT_OK);
 
@@ -27,7 +28,7 @@ $VERSION = '0.01';
 use base qw( Exporter );
 
 @EXPORT = qw( );
-@EXPORT_OK = qw ( );
+@EXPORT_OK = qw ( assert_hash assert assert_opts );
 
 
 =head1 SYNOPSIS
@@ -56,7 +57,7 @@ sub assert_hash {
 
 =item new ( OPTIONS )
 
-Return a new repository object.  The following options are supported:
+Return a new Git::Repo object.  The following options are supported:
 
 B<directory> - The directory of the repository.
 
@@ -64,6 +65,7 @@ Examples:
 
     $repo = Git::Repo->new(directory => "/path/to/repository.git");
     $repo = Git::Repo->new(directory => "/path/to/working_copy/.git");
+
 =cut
 
 sub new {
@@ -109,24 +111,24 @@ sub cmd_output {
 	open my $fh, '-|', @cmd
 	    or die 'cannot open pipe';
 	my($output, @lines);
-	if(wantarray) {
+	if (wantarray) {
 		@lines = <$fh>;
 	} else {
 		local $/;
 		$output = <$fh>;
 	}
-	if(not close $fh) {
-		if($!) {
+	if (not close $fh) {
+		if ($!) {
 			# Close failed.  Git.pm says it is OK to not
 			# die here.
 			carp "error closing pipe: $!";
-		} elsif($? >> 8) {
+		} elsif ($? >> 8) {
 			my $exit_code = $? >> 8;
 			die "Command died with exit code $exit_code: " . join(" ", @cmd)
 			    if $exit_code > $opts{max_exit_code};
 		}
 	}
-	return @lines if(wantarray);
+	return @lines if wantarray;
 	return $output;
 }
 
@@ -161,13 +163,13 @@ sub get_bidi_pipe {
 	die 'missing or empty cmd option' unless $opts{cmd} and @{$opts{cmd}};
 	my($stdin, $stdout);
 	my $cmd_str = join ' ', @{$opts{cmd}};  # key for reusing pipes
-	if($opts{reuse}) {
+	if ($opts{reuse}) {
 		my $pair = $self->{bidi_pipes}->{$cmd_str};
 		return @$pair if $pair;
 	}
 	open2($stdout, $stdin, ($self->_get_git_cmd, @{$opts{cmd}}))
 	    or die 'cannot open pipe';
-	if($opts{reuse}) {
+	if ($opts{reuse}) {
 		$self->{bidi_pipes}->{$cmd_str} = [$stdin, $stdout];
 	}
 	return ($stdin, $stdout);
@@ -182,7 +184,7 @@ sub _get_git_cmd {
 
 
 
-=head2
+=head2 Inspecting the Repository
 
 =item get_hash ( EXTENDED_OBJECT_IDENTIFIER )
 
@@ -217,17 +219,54 @@ sub get_hashes {
 		scalar (($self->cat_file_batch_check($_))[0]) } @$object_ids];
 }
 
-=item get_blob ( HASH )
-Return the contents of the blob identified by C<HASH>.
+=item cat_file ( HASH )
+
+Return the ($type, $contents) of the object identified by C<HASH>, or
+undef if C<HASH> doesn't exist in the repository.
+
+This is a low-level function.
+
 =cut
 
-# TODO: Add optional $file_handle parameter.
+# TODO: Add optional $file_handle parameter.  Guard against getting
+# huge blobs back when we don't expect it (for instance, we could
+# limit the size and send SIGPIPE to git-cat-file if we get a blob
+# that is too large).
 
-sub get_blob {
-	my ($self, $hash) = @_;
+sub cat_file {
+	my($self, $hash) = @_;
 	assert_hash($hash);
 
-	return $self->cmd_output(cmd => ['cat-file', 'blob', $hash])
+	my($in, $out) = $self->get_bidi_pipe(
+		cmd => ['cat-file','--batch'], reuse => 1);
+	print $in "$hash\n" or die 'cannot write to pipe';
+	my($ret_hash, $type, $size) = split ' ', $out->getline;
+	return undef if $type eq 'missing';
+	$out->read(my $contents, $size);
+	$out->getline;  # eat trailing newline
+	return ($type, $contents);
+}
+
+=item get_commit ( COMMITTISH_HASH )
+
+Return a new Git::Commit object with hash C<COMMITTISH_HASH>.
+
+=cut
+
+sub get_commit {
+	my($self, $hash) = @_;
+	Git::Commit->new($self, $hash);
+}
+
+=item get_tag ( TAG_HASH )
+
+Return a new Git::Tag object with hash C<TAGISH_HASH>.
+
+=cut
+
+sub get_tag {
+	my($self, $hash) = @_;
+	Git::Tag->new($self, $hash);
 }
 
 =item get_path ( TREEISH_HASH, BLOB_HASH )
@@ -239,14 +278,14 @@ the given tree.
 =cut
 
 sub get_path {
-	my ($self, $treeish, $blob_hash) = @_;
+	my($self, $treeish, $blob_hash) = @_;
 	assert_hash($treeish, $blob_hash);
 
 	# TODO: Turn this into a line-by-line pipe and/or reimplement
 	# in terms of recursive ls_tree calls.
 	my @lines = split "\n", $self->cmd_output(cmd => ['ls-tree', '-r', '-t', $treeish]);
 	for (@lines) {
-		if(/^[0-9]+ [a-z]+ $blob_hash\t(.+)$/) {
+		if (/^[0-9]+ [a-z]+ $blob_hash\t(.+)$/) {
 			return $1;
 		}
 	}
@@ -256,8 +295,8 @@ sub get_path {
 =item ls_tree ( TREEISH_HASH )
 
 Return a reference to an array of five-element arrays [$mode, $type,
-$hash, $blob_size, $name].  $blob_size is an integer or undef for
-tree entries (sub-directories).
+$hash, $blob_size, $name].  $blob_size is an integer for blobs or
+undef for tree or commit entries.
 
 =cut
 
@@ -295,6 +334,8 @@ used to name the commit.
 
 =cut
 
+# TODO: Use --stdin with bidi pipe.
+
 sub name_rev {
 	my($self, $hash, $tags_only) = @_;
 	assert_hash($hash);
@@ -304,6 +345,8 @@ sub name_rev {
 			 $hash ]);
 	return $name eq 'undefined' ? undef : $name;
 }
+
+
 
 
 # TODO: Underscore-prefix the following methods, and exclude them from
@@ -324,7 +367,7 @@ sub cat_file_batch_check {
 		cmd => ['cat-file','--batch-check'], reuse => 1);
 	print $in "$object_id\n" or die 'cannot write to pipe';
 	chomp(my $output = <$out>) or die 'no output from pipe';
-	if($output =~ /missing$/) {
+	if ($output =~ /missing$/) {
 		return ();
 	} else {
 		$output =~ /^([0-9a-f]{40}) ([a-z]+) ([0-9]+)$/
@@ -335,3 +378,4 @@ sub cat_file_batch_check {
 
 
 1;
+

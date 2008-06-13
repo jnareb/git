@@ -8,7 +8,14 @@ instlibdir:
 MAKE_FRAG
 }
 
-my %pm = ('Git.pm' => '$(INST_LIBDIR)/Git.pm');
+# Note that when changing %pm, you'll have to remove pm_to_blib rather
+# than the blib directory to .force the .pm files to be re-installed
+# to blib/lib.
+my %pm = ('Git.pm' => '$(INST_LIBDIR)/Git.pm',
+	  'Git/Repo.pm' => '$(INST_LIBDIR)/Git/Repo.pm',
+	  'Git/Commit.pm' => '$(INST_LIBDIR)/Git/Commit.pm',
+	  'Git/Tag.pm' => '$(INST_LIBDIR)/Git/Tag.pm',
+	  'Git/Object.pm' => '$(INST_LIBDIR)/Git/Object.pm');
 
 # We come with our own bundled Error.pm. It's not in the set of default
 # Perl modules so install it if it's not available on the system yet.

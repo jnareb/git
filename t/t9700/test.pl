@@ -12,7 +12,6 @@ use File::Temp;
 use IO::String;
 
 BEGIN { use_ok('Git') }
-require_ok('Git');
 
 # set up
 our $repo_dir = "trash directory";
