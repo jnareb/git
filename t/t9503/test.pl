@@ -7,13 +7,20 @@ use strict;
 
 use Cwd qw(abs_path);
 use File::Spec;
+use XML::Parser;
 use Test::More qw(no_plan);
 use Test::WWW::Mechanize::CGI;
 
-eval { require HTML::Lint };
+eval { require HTML::Lint; };
 my $lint_installed = !$@;
 diag('HTML::Lint is not installed; no HTML validation tests')
 	unless $lint_installed;
+
+eval { require XML::Parser; };
+my $xml_parser_installed = !$@;
+diag('XML::Parser is not installed; no tests for well-formed XML')
+	unless $xml_parser_installed;
+
 
 my $gitweb = File::Spec->catfile('..','..','gitweb','gitweb.perl');
 # the followin two lines of code are workaround for bug in
@@ -24,10 +31,17 @@ $gitweb = File::Spec->rel2abs($gitweb);
 $gitweb = Cwd::abs_path($gitweb);
 
 my $mech = new Test::WWW::Mechanize::CGI;
+$mech->env(
+	GITWEB_CONFIG => $ENV{'GITWEB_CONFIG'},
+);
 $mech->cgi_application($gitweb);
-$mech->env(GITWEB_CONFIG => $ENV{'GITWEB_CONFIG'});
 
-# import config, pedeclaring config variables
+my $xml_parser;
+if ($xml_parser_installed) {
+	$xml_parser = new XML::Parser;
+}
+
+# import config, predeclaring config variables
 our $site_name = '';
 require_ok($ENV{'GITWEB_CONFIG'})
 	or diag('Could not load gitweb config; some tests would fail');
@@ -40,7 +54,7 @@ SKIP: {
 		unless $mech->get_ok('http://localhost/', "GET $pagename");
 	$mech->html_lint_ok('page validates') if $lint_installed;
 	$mech->title_like(qr!$site_name!,
-		'title contains $site_name');
+		"title contains $site_name");
 	$mech->content_contains('./t9503-gitweb-Mechanize.sh test repository', 
 		'lists test repository (by description)');
 }
@@ -86,6 +100,59 @@ $pagename = 'non existent commit';
 $mech->get('http://localhost/?p=.git;a=commit;h=non-existent');
 like($mech->status, qr/40[0-9]/, "40x status response for $pagename");
 $mech->html_lint_ok('page validates') if $lint_installed;
+
+$pagename = 'HEAD commit in non existent repository';
+$mech->get('http://localhost/?p=non-existent.git;a=commit;h=HEAD');
+like($mech->status, qr/40[0-9]/, "40x status response for $pagename");
+$mech->html_lint_ok('page validates') if $lint_installed;
+
+SKIP: {
+	$pagename = 'test repository RSS feed (default)';
+	$get_ok = $mech->get_ok('http://localhost/?p=.git;a=rss',
+		"GET $pagename");
+	skip "Could not get $pagename", 0 + $xml_parser_installed
+		unless $get_ok;
+
+	if ($xml_parser_installed) {
+		eval {
+			$xml_parser->parse($mech->content());
+		};
+		ok(! $@, "$pagename is well formed XML")
+			or diag($@);
+	}
+}
+
+SKIP: {
+	$pagename = 'test repository Atom feed (default)';
+	$get_ok = $mech->get_ok('http://localhost/?p=.git;a=atom',
+		"GET $pagename");
+	skip "Could not get $pagename", 0 + $xml_parser_installed
+		unless $get_ok;
+
+	if ($xml_parser_installed) {
+		eval {
+			$xml_parser->parse($mech->content());
+		};
+		ok(! $@, "$pagename is well formed XML")
+			or diag($@);
+	}
+}
+
+SKIP: {
+	$pagename = 'list of repositories in OPML format';
+	$get_ok = $mech->get_ok('http://localhost/?a=opml',
+		"GET $pagename");
+	skip "Could not get $pagename", 0 + $xml_parser_installed
+		unless $get_ok;
+
+	if ($xml_parser_installed) {
+		eval {
+			$xml_parser->parse($mech->content());
+		};
+		ok(! $@, "$pagename is well formed XML")
+			or diag($@);
+	}
+}
 
 1;
 __END__

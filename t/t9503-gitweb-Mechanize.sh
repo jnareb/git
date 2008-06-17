@@ -120,7 +120,7 @@ export GITWEB_CONFIG
 
 # run tests
 
-test_external_without_stderr \
+test_external \
 	'test gitweb output' \
 	perl ../t9503/test.pl
 
