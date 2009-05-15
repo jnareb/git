@@ -34,10 +34,11 @@ You can specify the following configuration variables when building GIT:
  * GITWEB_LIST
    Points to a directory to scan for projects (defaults to project root
    if not set / if empty) or to a file with explicit listing of projects
-   (together with projects' ownership). See "Generating projects list
-   using gitweb" in INSTALL file for gitweb to find out how to generate
-   such file from scan of a directory. [No default, which means use root
-   directory for projects]
+   (together with projects' ownership). Note that gitweb deals with bare
+   repositories; it shows/uses $GIT_DIR for each repository. See also
+   "Generating projects list using gitweb" in INSTALL file for gitweb to
+   find out how to generate such file from scan of a directory. 
+   [No default, which means use root directory for projects]
  * GITWEB_EXPORT_OK
    Show repository only if this file exists (in repository).  Only
    effective if this variable evaluates to true.  [No default / Not set]
@@ -153,7 +154,8 @@ not include variables usually directly set during build):
    Absolute filesystem path which will be prepended to project path;
    the path to repository is $projectroot/$project.  Set to
    $GITWEB_PROJECTROOT during installation.  This variable have to be
-   set correctly for gitweb to find repositories.
+   set correctly for gitweb to find repositories.  (Note that gitweb deals
+   with bare repositories.)
  * $projects_list
    Source of projects list, either directory to scan, or text file
    with list of repositories (in the "<URI-encoded repository path> SP
